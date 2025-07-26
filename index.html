@@ -11,6 +11,7 @@
   label { display: block; margin-top: 10px; }
   input, select { padding: 6px; margin-top: 4px; width: 100%; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; }
   .result { background: #f0f8ff; border-left: 5px solid #4CAF50; padding: 10px; margin-top: 15px; border-radius: 8px; font-weight: bold; white-space: pre-line; }
+  .advice { background: #fff8e1; border-left: 5px solid #ffa000; padding: 10px; margin-top: 10px; border-radius: 8px; font-weight: normal; white-space: pre-line; }
   .checkbox-list { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
   .explain { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 30px; }
   h2 { margin-top: 0; }
@@ -43,6 +44,7 @@
 
   <button onclick="calcMale()">女性条件を計算</button>
   <div id="male_result" class="result"></div>
+  <div id="male_advice" class="advice"></div>
 </div>
 
 <div class="card">
@@ -50,6 +52,7 @@
   <label>女性年齢: <input type="number" id="f_age" value="27"></label>
   <button onclick="calcFemale()">男性条件を計算</button>
   <div id="female_result" class="result"></div>
+  <div id="female_advice" class="advice"></div>
 </div>
 
 <!-- ▼▼▼ 解説セクション ▼▼▼ -->
@@ -65,20 +68,6 @@
     <li><strong>難点</strong> … 多いほど釣り合う女性年齢は上がる（1つにつき+1.5歳）</li>
     <li><strong>年齢差補正</strong> … 男性が女性より13歳以上年上だと、難点+1され女性年齢+2歳</li>
   </ul>
-
-  <h3>⚖️ 難点リスト（最大10）</h3>
-  <ol>
-    <li>🚬 喫煙</li>
-    <li>⚖️ 肥満（BMI30以上）</li>
-    <li>🎓 非大卒</li>
-    <li>🚌 通勤1時間半以上</li>
-    <li>💇 清潔感不足</li>
-    <li>💬 話し方の癖</li>
-    <li>🏠 実家依存（親との同居必須）</li>
-    <li>💵 借金（奨学金除く）</li>
-    <li>⚠️ 無職期間が長い（1年以上）</li>
-    <li>💻 趣味が極端（ゲーム廃人・収集癖など）</li>
-  </ol>
 
   <h3>🎯 釣り合い度（％）とは？</h3>
   <ul>
@@ -122,11 +111,30 @@ function calcMale() {
   if (score < 0) score = 0;
   if (score > 100) score = 100;
 
+  // ✅ 改善アドバイス作成
+  let advice = "";
+  if (demeritCount >= 5) {
+    advice += "⚠️ 難点が多いですね。難点を1つ減らすごとに釣り合い度が約5％上がります。\n";
+  } else if (demeritCount > 0) {
+    advice += "💡 難点を1つ減らすと釣り合い度がさらに上がります。\n";
+  }
+  if (income < 500) {
+    advice += "💰 年収を50万円増やすと釣り合う女性年齢が約0.5歳下がります。\n";
+  }
+  if (height < 168) {
+    advice += "📏 身長は変えにくいですが、清潔感と姿勢改善で印象アップを狙いましょう。\n";
+  }
+  if (advice === "") {
+    advice = "✅ 現状でもバランスは悪くありません！";
+  }
+
   document.getElementById('male_result').innerText =
 `${mAge}歳男性（年収${income}万円, ${height}cm, 難点${demeritCount}）の場合
 
 👩 釣り合う女性年齢レンジ：${femaleAgeMin}〜${femaleAgeMax}歳
 💯 釣り合い度：${score.toFixed(0)}％`;
+
+  document.getElementById('male_advice').innerText = advice;
 }
 
 /* ───────────
@@ -153,6 +161,18 @@ function calcFemale() {
   let scoreLow = Math.max(0, 100 - (fAge - 20) * 2);
   let scoreHigh = Math.min(100, scoreLow + 20);
 
+  // ✅ 改善アドバイス（女性版）
+  let advice = "";
+  if (fAge >= 32) {
+    advice += "💡 難点1〜2を許容すると出会いの範囲が広がります。\n";
+  }
+  if (fAge >= 28) {
+    advice += "⚠️ 条件を柔軟にすると、候補となる男性がぐっと増えます。\n";
+  }
+  if (advice === "") {
+    advice = "✅ 今の年齢なら幅広い相手と釣り合います！";
+  }
+
   document.getElementById('female_result').innerText =
 `${fAge}歳女性の場合
 
@@ -161,6 +181,8 @@ function calcFemale() {
 📏 身長レンジ：${Math.round(heightMin)}〜${Math.round(heightMax)}cm
 ⚠️ 難点レンジ：${demeritRange}
 💯 釣り合い度（目安）：${scoreLow.toFixed(0)}〜${scoreHigh.toFixed(0)}％`;
+
+  document.getElementById('female_advice').innerText = advice;
 }
 </script>
 
