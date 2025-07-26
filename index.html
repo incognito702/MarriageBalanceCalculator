@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>結婚釣り合い計算機（完成版）</title>
+<style>
+  body { font-family: 'Hiragino Sans', sans-serif; background: #f7f7f7; padding: 20px; line-height: 1.6; }
+  h1 { text-align: center; margin-bottom: 20px; }
+  .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 30px; }
+  label { display: block; margin-top: 10px; }
+  input, select { padding: 6px; margin-top: 4px; width: 100%; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; }
+  .result { background: #f0f8ff; border-left: 5px solid #4CAF50; padding: 10px; margin-top: 15px; border-radius: 8px; font-weight: bold; white-space: pre-line; }
+  .checkbox-list { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+  .explain { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 30px; }
+  h2 { margin-top: 0; }
+  code { background: #f5f5f5; padding: 2px 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>💍 結婚釣り合い計算機（完成版）</h1>
+
+<div class="card">
+  <h2>👔 男性用</h2>
+  <label>男性年齢: <input type="number" id="m_age" value="28"></label>
+  <label>男性年収 (万円): <input type="number" id="m_income" value="600"></label>
+  <label>男性身長 (cm): <input type="number" id="m_height" value="172"></label>
+  
+  <p>✅ 難点（当てはまるものをチェック）</p>
+  <div class="checkbox-list">
+    <label><input type="checkbox" class="m_demerit"> 🚬 喫煙</label>
+    <label><input type="checkbox" class="m_demerit"> ⚖️ 肥満（BMI30以上）</label>
+    <label><input type="checkbox" class="m_demerit"> 🎓 非大卒</label>
+    <label><input type="checkbox" class="m_demerit"> 🚌 通勤1時間半以上</label>
+    <label><input type="checkbox" class="m_demerit"> 💇 清潔感不足</label>
+    <label><input type="checkbox" class="m_demerit"> 💬 話し方の癖</label>
+    <label><input type="checkbox" class="m_demerit"> 🏠 実家依存</label>
+    <label><input type="checkbox" class="m_demerit"> 💵 借金あり</label>
+    <label><input type="checkbox" class="m_demerit"> ⚠️ 無職期間長い</label>
+    <label><input type="checkbox" class="m_demerit"> 💻 趣味が極端</label>
+  </div>
+
+  <button onclick="calcMale()">女性条件を計算</button>
+  <div id="male_result" class="result"></div>
+</div>
+
+<div class="card">
+  <h2>👗 女性用</h2>
+  <label>女性年齢: <input type="number" id="f_age" value="27"></label>
+  <button onclick="calcFemale()">男性条件を計算</button>
+  <div id="female_result" class="result"></div>
+</div>
+
+<!-- ▼▼▼ 解説セクション ▼▼▼ -->
+<div class="explain">
+  <h2>📘 計算モデルの説明</h2>
+  <p>この計算機は、<strong>男女共通の方程式</strong>を使って「結婚相手として釣り合う条件」を計算しています。</p>
+
+  <h3>🔢 共通の基礎方程式</h3>
+  <pre><code>女性年齢 = 45 − (年収 ÷ 200) − ((身長 − 170) ÷ 2) + (難点 × 1.5)</code></pre>
+  <ul>
+    <li><strong>年収</strong>（万円単位） … 高いほど若い女性と釣り合う</li>
+    <li><strong>身長</strong>（cm） … 高いほど有利（170cmを基準）</li>
+    <li><strong>難点</strong> … 多いほど釣り合う女性年齢は上がる（1つにつき+1.5歳）</li>
+    <li><strong>年齢差補正</strong> … 男性が女性より13歳以上年上だと、難点+1され女性年齢+2歳</li>
+  </ul>
+
+  <h3>⚖️ 難点リスト（最大10）</h3>
+  <ol>
+    <li>🚬 喫煙</li>
+    <li>⚖️ 肥満（BMI30以上）</li>
+    <li>🎓 非大卒</li>
+    <li>🚌 通勤1時間半以上</li>
+    <li>💇 清潔感不足</li>
+    <li>💬 話し方の癖</li>
+    <li>🏠 実家依存（親との同居必須）</li>
+    <li>💵 借金（奨学金除く）</li>
+    <li>⚠️ 無職期間が長い（1年以上）</li>
+    <li>💻 趣味が極端（ゲーム廃人・収集癖など）</li>
+  </ol>
+
+  <h3>🎯 釣り合い度（％）とは？</h3>
+  <ul>
+    <li>100％ … 非常に釣り合っている</li>
+    <li>50〜80％ … ある程度釣り合っている</li>
+    <li>30％以下 … 条件面では釣り合いにくい</li>
+  </ul>
+</div>
+
+<script>
+/* ───────────
+   👔 男性版
+─────────── */
+function calcMale() {
+  const mAge = parseFloat(document.getElementById('m_age').value);
+  const income = parseFloat(document.getElementById('m_income').value);
+  const height = parseFloat(document.getElementById('m_height').value);
+
+  // 難点数カウント
+  const demeritChecks = document.querySelectorAll('.m_demerit');
+  let demeritCount = 0;
+  demeritChecks.forEach(cb => { if (cb.checked) demeritCount++; });
+
+  // 女性年齢の中心値（共通モデル）
+  let femaleAge = 45 - (income / 200) - ((height - 170) / 2) + (demeritCount * 1.5);
+
+  // 年齢差補正
+  if (mAge - femaleAge > 13) {
+    demeritCount += 1;
+    femaleAge += 2;
+  }
+  if (femaleAge < 18) femaleAge = 18;
+
+  // レンジ
+  const femaleAgeMin = Math.max(18, Math.floor(femaleAge - 1));
+  const femaleAgeMax = Math.ceil(femaleAge + 2);
+
+  // 🎯 釣り合い度算出
+  let ageDiff = Math.abs(mAge - femaleAge);
+  let score = 100 - (ageDiff * 3 + demeritCount * 5);
+  if (score < 0) score = 0;
+  if (score > 100) score = 100;
+
+  document.getElementById('male_result').innerText =
+`${mAge}歳男性（年収${income}万円, ${height}cm, 難点${demeritCount}）の場合
+
+👩 釣り合う女性年齢レンジ：${femaleAgeMin}〜${femaleAgeMax}歳
+💯 釣り合い度：${score.toFixed(0)}％`;
+}
+
+/* ───────────
+   👗 女性版
+─────────── */
+function calcFemale() {
+  const fAge = parseFloat(document.getElementById('f_age').value);
+
+  // 男性年収と身長の基準値を共通モデルから逆算
+  let baseIncome = (45 - fAge) * 200 * 0.5; 
+  if (baseIncome < 300) baseIncome = 300;
+
+  const maleAgeMin = fAge - 2;
+  const maleAgeMax = fAge + 7;
+
+  const heightMin = 165 + (27 - fAge) * 0.2;
+  const heightMax = heightMin + 10;
+
+  let demeritRange = "0〜1";
+  if (fAge >= 30 && fAge <= 34) demeritRange = "0〜3";
+  else if (fAge >= 35) demeritRange = "0〜5";
+
+  // 🎯 釣り合い度（女性版は目安）
+  let scoreLow = Math.max(0, 100 - (fAge - 20) * 2);
+  let scoreHigh = Math.min(100, scoreLow + 20);
+
+  document.getElementById('female_result').innerText =
+`${fAge}歳女性の場合
+
+👨 男性年齢レンジ：${maleAgeMin}〜${maleAgeMax}歳
+💰 年収目安：約${Math.round(baseIncome)}万円〜
+📏 身長レンジ：${Math.round(heightMin)}〜${Math.round(heightMax)}cm
+⚠️ 難点レンジ：${demeritRange}
+💯 釣り合い度（目安）：${scoreLow.toFixed(0)}〜${scoreHigh.toFixed(0)}％`;
+}
+</script>
+
+</body>
+</html>
